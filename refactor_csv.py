@@ -26,15 +26,13 @@ def refactor(csv_path, new_csv_path):
                 csv_writer.writerow([row[5], row[11]])
 
 
-def vectorize_dataset(csv_path):
+def vectorize_dataset(csv_path, numpy_path):
     """Perform bag of words algorithm on the dataset.
     TODO: 
     Right now this function only performs bag-of-words on the dataset 
     and returns every sentence as vector in form of numpy array. 
     We need to add label (sentiment) to every sentence but tbh I'm not sure
-    how the neural net model will look like. Also this function should
-    save the dataset on the disk because the time to compute this function
-    is pretty long.
+    how the neural net model will look like.
     """
     # List of words in the dataset.
     dataset_words = []
@@ -77,13 +75,13 @@ def vectorize_dataset(csv_path):
 
     # Transform dataset_sentences list into numpy array.
     a = np.array(dataset_sentences)
+    np.save(numpy_path, a)
     return a
 
 
 if __name__ == "__main__":
-    dataset = vectorize_dataset('apple-twitter2.csv')
-    print(len(dataset[2]))
-
+    # dataset = vectorize_dataset('apple-twitter.csv', 'test')
+    # print(len(dataset[2]))
     # # File path to the csv file.
     # csv_path = 'Apple-Twitter-Sentiment-DFE.csv'
 
