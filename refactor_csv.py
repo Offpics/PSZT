@@ -124,12 +124,17 @@ if __name__ == "__main__":
     # # Refactor dataset.
     # refactor(csv_path, new_csv_path)
     
-    print(readWords("apple-twitter2.csv"))  #show list of words in rows
+    #print(readWords("apple-twitter2.csv"))  #show list of words in rows
     print(readSentiments("apple-twitter2.csv")) #show sentiments from rows
-
+    list2=[]
     list1 = readWords("apple-twitter2.csv")[0]  # take a list of words
     for i in (list1):                           # in all raws from file
         print (''.join(i).split())              # transform sentences into separate words
-
+        list2 = ''.join(i).split()
     
-    
+    list3=list2[0]
+    a=0
+    for i in list3:
+        a=a+ord(i)
+       
+    print(a)
