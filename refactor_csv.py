@@ -5,7 +5,6 @@ import re
 
 def refactor(csv_path, new_csv_path):
     """Extract sentiment and text into new csv file.
-
     Args:
     csv_path -- file path to the csv file
     new_csv_path -- file path to the new csv file
@@ -79,8 +78,41 @@ def vectorize_dataset(csv_path, numpy_path):
     return a
 
 
+def readWords(filename):
+    file = open(filename)
+    reader = csv.reader(file)
+    header = next(reader)
+    
+    def readInput(row):
+        return [par for par in row[1:]]
+    
+    words = [readInput(next(reader))]
+    
+    for row in reader:
+        inp = readInput(row)
+        words.append(inp)
+    return [words]
+
+
+def readSentiments(filename):
+    file = open(filename)
+    reader = csv.reader(file)
+    header = next(reader)
+
+    def readSent(row):
+        return row[0]
+
+    sentiments = [readSent(next(reader))]
+
+    for row in reader:
+        sent=readSent(row)
+        sentiments.append(sent)
+    return [sentiments]
+
+
+
 if __name__ == "__main__":
-    # dataset = vectorize_dataset('apple-twitter.csv', 'test')
+    #dataset = vectorize_dataset('apple-twitter.csv', 'test')
     # print(len(dataset[2]))
     # # File path to the csv file.
     # csv_path = 'Apple-Twitter-Sentiment-DFE.csv'
@@ -90,3 +122,7 @@ if __name__ == "__main__":
 
     # # Refactor dataset.
     # refactor(csv_path, new_csv_path)
+    print(readWords("apple-twitter2.csv"))
+    print(readSentiments("apple-twitter2.csv"))
+    #   
+
