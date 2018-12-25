@@ -78,7 +78,7 @@ def vectorize_dataset(csv_path, numpy_path):
     return a
 
 
-def readWords(filename):
+def readWords(filename): #read words from refracted file
     file = open(filename)
     reader = csv.reader(file)
     header = next(reader)
@@ -94,7 +94,7 @@ def readWords(filename):
     return [words]
 
 
-def readSentiments(filename):
+def readSentiments(filename): # read sentiments from refracted file
     file = open(filename)
     reader = csv.reader(file)
     header = next(reader)
@@ -122,7 +122,7 @@ if __name__ == "__main__":
 
     # # Refactor dataset.
     # refactor(csv_path, new_csv_path)
-    print(readWords("apple-twitter2.csv"))
-    print(readSentiments("apple-twitter2.csv"))
+    print(readWords("apple-twitter2.csv"))  #show list of words in rows
+    print(readSentiments("apple-twitter2.csv")) #show sentiments from rows
     #   
 
