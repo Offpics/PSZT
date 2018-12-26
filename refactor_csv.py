@@ -23,30 +23,38 @@ def refactor(csv_path, new_csv_path):
 
             for row in csv_content:
                 # Write every 'sentiment' and 'text' to new row.
-                csv_writer.writerow([row[5], row[11]])
+                if row[5] != 'not_relevant':
+                    csv_writer.writerow([row[5], row[11]])
 
 
-def vectorize_dataset(csv_path, numpy_path):
-    """Perform bag of words algorithm on the dataset.
-    TODO: 
-    Right now this function only performs bag-of-words on the dataset 
-    and returns every sentence as vector in form of numpy array. 
-    We need to add label (sentiment) to every sentence but tbh I'm not sure
-    how the neural net model will look like.
-    """
+def vectorize_dataset(csv_path, x_train_path, y_train_path):
+    """Perform bag of words algorithm on the dataset."""
     # List of words in the dataset.
     dataset_words = []
 
     # List of sentences in the dataset.
     dataset_sentences = []
 
+    # List of sentiments in the dataset.
+    dataset_sentiments = []
+
+    # count = 0
     # Open csv dataset.
     with open(csv_path) as csv_file:
-        #Create reader object used to iterate over every row in the file.
+        # Create reader object used to iterate over every row in the file.
         csv_content = csv.reader(csv_file, delimiter=',')
 
+        # Helper variable to skip first row which contains labels of csv.
+        first_row = True
+
         for row in csv_content:
-            #TODO: Skip first row because it has labels in it.
+
+            # Skip first row of csv file.
+            if first_row == True:
+                first_row = False
+                continue
+
+            # count += 1
             ignore_words = ['a']
             # Split every words into a list.
             words = re.sub("[^\w]", " ",  row[1]).split()
@@ -56,9 +64,13 @@ def vectorize_dataset(csv_path, numpy_path):
 
             dataset_words.extend(words)
             dataset_sentences.append(words)
+            dataset_sentiments.append(row[0])
 
     # Transform into set to avoid duplicates and create sorted list.
     dataset_words = sorted(list(set(dataset_words)))
+
+    print(len(dataset_sentences))
+    # print(count)
 
     # Perform bag of words on the dataset.
     for i, sentence in enumerate(dataset_sentences):
@@ -70,18 +82,19 @@ def vectorize_dataset(csv_path, numpy_path):
             for j, word_w in enumerate(dataset_words):
                 if word_w == word_s:
                     bag[j] += 1
-        
+
         dataset_sentences[i] = bag
 
     # Transform dataset_sentences list into numpy array.
-    a = np.array(dataset_sentences)
-    np.save(numpy_path, a)
-    return a
+    x_train = np.array(dataset_sentences)
+    np.save(x_train_path, x_train)
+
+    y_train = np.array(dataset_sentiments)
+    np.save(y_train_path, y_train)
+    return x_train, y_train
 
 
 if __name__ == "__main__":
-    # dataset = vectorize_dataset('apple-twitter.csv', 'test')
-    # print(len(dataset[2]))
     # # File path to the csv file.
     # csv_path = 'Apple-Twitter-Sentiment-DFE.csv'
 
@@ -90,3 +103,15 @@ if __name__ == "__main__":
 
     # # Refactor dataset.
     # refactor(csv_path, new_csv_path)
+
+    # x_train, y_train = vectorize_dataset('apple-twitter.csv',
+    #                                      'x_train',
+    #                                      'y_train')
+
+    x_train = np.load('x_train.npy')
+    y_train = np.load('y_train.npy')
+    print(x_train.shape)
+    print(y_train.shape)
+
+    for i in range(10):
+        print(f'Sentiment: {y_train[i]}, Text: {x_train[i]}')
