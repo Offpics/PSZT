@@ -72,17 +72,20 @@ def vectorize_dataset(csv_path, x_train_path, y_train_path):
     print(len(dataset_sentences))
     # print(count)
 
+    len_dataset_words = len(dataset_words)
+
     # Perform bag of words on the dataset.
     for i, sentence in enumerate(dataset_sentences):
         # Numpy array that will represent every sentence with frequencies
         # of used words.
-        bag = np.zeros(len(dataset_words))
+        bag = np.zeros(len_dataset_words)
 
         for word_s in sentence:
             for j, word_w in enumerate(dataset_words):
                 if word_w == word_s:
                     bag[j] += 1
-
+        
+        bag = np.reshape(bag, (len_dataset_words, 1))
         dataset_sentences[i] = bag
 
     # Transform dataset_sentences list into numpy array.
@@ -108,10 +111,10 @@ if __name__ == "__main__":
     #                                      'x_train',
     #                                      'y_train')
 
-    x_train = np.load('x_train.npy')
-    y_train = np.load('y_train.npy')
-    print(x_train.shape)
-    print(y_train.shape)
+    # x_train = np.load('x_train.npy')
+    # y_train = np.load('y_train.npy')
+    # print(x_train.shape)
+    # print(y_train.shape)
 
-    for i in range(10):
-        print(f'Sentiment: {y_train[i]}, Text: {x_train[i]}')
+    # for i in range(10):
+    #     print(f'Sentiment: {y_train[i]}, Text: {x_train[i]}')
