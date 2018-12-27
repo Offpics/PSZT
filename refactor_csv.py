@@ -64,7 +64,17 @@ def vectorize_dataset(csv_path, x_train_path, y_train_path):
 
             dataset_words.extend(words)
             dataset_sentences.append(words)
-            dataset_sentiments.append(row[0])
+
+
+            one_hot = np.zeros(3)
+            if int(row[0]) == 1:
+                one_hot[0] = 1
+            elif int(row[0]) == 3:
+                one_hot[1] = 1
+            elif int(row[0]) == 5:
+                one_hot[2] = 1
+
+            dataset_sentiments.append(one_hot)
 
     # Transform into set to avoid duplicates and create sorted list.
     dataset_words = sorted(list(set(dataset_words)))
@@ -115,6 +125,9 @@ if __name__ == "__main__":
     # y_train = np.load('y_train.npy')
     # print(x_train.shape)
     # print(y_train.shape)
+
+    # y_train
+    # print(y_train[1])
 
     # for i in range(10):
     #     print(f'Sentiment: {y_train[i]}, Text: {x_train[i]}')
