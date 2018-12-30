@@ -95,31 +95,31 @@ def vectorize_dataset(csv_path, x_train_path, y_train_path):
                 if word_w == word_s:
                     bag[j] += 1
         
-        bag = np.reshape(bag, (len_dataset_words, 1))
+        # bag = np.reshape(bag, (len_dataset_words, 1))
         dataset_sentences[i] = bag
 
     # Transform dataset_sentences list into numpy array.
-    x_train = np.array(dataset_sentences)
+    x_train = np.array(dataset_sentences[:1000])
     np.save(x_train_path, x_train)
 
-    y_train = np.array(dataset_sentiments)
+    y_train = np.array(dataset_sentiments[:1000])
     np.save(y_train_path, y_train)
     return x_train, y_train
 
 
 if __name__ == "__main__":
-    # # File path to the csv file.
-    # csv_path = 'Apple-Twitter-Sentiment-DFE.csv'
+    # File path to the csv file.
+    csv_path = 'Apple-Twitter-Sentiment-DFE.csv'
 
-    # # File path to the new csv file.
-    # new_csv_path = 'apple-twitter.csv'
+    # File path to the new csv file.
+    new_csv_path = 'apple-twitter.csv'
 
-    # # Refactor dataset.
-    # refactor(csv_path, new_csv_path)
+    # Refactor dataset.
+    refactor(csv_path, new_csv_path)
 
-    # x_train, y_train = vectorize_dataset('apple-twitter.csv',
-    #                                      'x_train',
-    #                                      'y_train')
+    x_train, y_train = vectorize_dataset('apple-twitter.csv',
+                                         'x_train',
+                                         'y_train')
 
     # x_train = np.load('x_train.npy')
     # y_train = np.load('y_train.npy')
