@@ -4,11 +4,11 @@ import re
 
 
 def refactor(csv_path, new_csv_path):
-    """Extract sentiment and text into new csv file.
+    """ Extract sentiment and text into new csv file.
 
     Args:
-    csv_path -- file path to the csv file
-    new_csv_path -- file path to the new csv file
+        csv_path: File path to the csv file.
+        new_csv_path: File path to the new csv file.
     """
 
     # Open the original csv file.
@@ -28,7 +28,12 @@ def refactor(csv_path, new_csv_path):
 
 
 def vectorize_dataset(csv_path, x_train_path, y_train_path):
-    """Perform bag of words algorithm on the dataset."""
+    """ Vectorize dataset using bag-of-words algorithm and one-hot encoding
+    
+    Args:
+        x_train_path: Path to file to save x_train array.
+        y_train_path: Path to file to save y_train array.
+    """
     # List of words in the dataset.
     dataset_words = []
 
@@ -65,7 +70,7 @@ def vectorize_dataset(csv_path, x_train_path, y_train_path):
             dataset_words.extend(words)
             dataset_sentences.append(words)
 
-
+            # Change sentiments to one-hot vector.
             one_hot = np.zeros(3)
             if int(row[0]) == 1:
                 one_hot[0] = 1
