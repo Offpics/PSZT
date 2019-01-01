@@ -42,7 +42,7 @@ class MLP():
             self.param_values['b' + str(i)] = np.random.randn(
                 output_size) * 0.01
 
-    def train(self, x, y_true, epochs):
+    def train(self, x, y_true, epochs, silent=False):
         """ Perform training of neural network.
 
         Args:
@@ -63,19 +63,57 @@ class MLP():
             # Update weights of neural network.
             self._update_weights()
 
-            # Calculate cross_entropy_loss.
-            y_pred = self.memory['a' + str(len(self.layers))]
-            cross_entropy_loss = np.sum(-y_true * np.log(y_pred))
+            if silent == False:
+                # Calculate cross_entropy_loss.
+                y_pred = self.memory['a' + str(len(self.layers))]
+                cross_entropy_loss = np.sum(-y_true * np.log(y_pred))
 
-            # Calculate accuracy over whole input data.
-            correct_pred = 0
-            for i in range(len(y_pred)):
-                equal = np.equal(np.argmax(y_true[i]), np.argmax(y_pred[i]))
-                correct_pred += equal.astype(float)
-            accuracy = (correct_pred/len(y_true))*100
+                # Calculate accuracy over whole input data.
+                accuracy = self.calculate_accuracy(y_true, y_pred)
 
-            # Print current loss and accuracy of the neural net.
-            print(f'loss: {cross_entropy_loss:.2f}, accuracy: {accuracy:.1f}%')
+                # Print current loss and accuracy of the neural net.
+                print(f'loss: {cross_entropy_loss:.2f}, accuracy: {accuracy:.1f}%')
+
+    def calculate_accuracy(self, y_true, y_pred):
+        correct_pred = 0
+        for i in range(len(y_pred)):
+            equal = np.equal(np.argmax(y_true[i]), np.argmax(y_pred[i]))
+            correct_pred += equal.astype(float)
+        accuracy = (correct_pred/len(y_true))*100
+
+        return accuracy
+
+    def score(self, x, y):
+        self._forward(x)
+        y_pred = self.memory['a' + str(len(self.layers))]
+        
+        accuracy = self.calculate_accuracy(y, y_pred)
+
+        return accuracy
+
+    def k_fold_validation(self, x, y_true, k):
+        """ Perform k-fold cross validation. """
+
+        # Split dataset into k folds.
+        x_folds = np.array_split(x, k)
+        y_folds = np.array_split(y_true, k)
+
+        accuracies = []
+
+        for i, fold in enumerate(x_folds[:(k-1)]):
+            # Init new weights for layers.
+            self.init_layers()
+
+            # Train network with one fold.
+            self.train(fold, y_folds[i], 300, True)
+
+            # Calculate accuracy of the trained network on last fold.
+            accuracy = self.score(x_folds[k-1], y_folds[k-1])
+
+            accuracies.append(accuracy)
+
+        print(f'Accuracies on k_folds: {accuracies}')
+        print(f'Mean of accuracies: {np.mean(accuracies)}')
 
     def _forward(self, x):
         """ Perform forward step in the neural network.
