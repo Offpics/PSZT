@@ -51,6 +51,7 @@ class MLP():
             y_true(numpy.ndarray): Array of true labels in one-hot format
                                    and shape (num_of_inputs, one-hot).
             epochs(int): Number of epochs to perform.
+            silent(bool): Whether to calculate loss and accuracy and print it.
         """
 
         for _ in range(epochs):
@@ -75,37 +76,81 @@ class MLP():
                 print(f'loss: {cross_entropy_loss:.2f}, accuracy: {accuracy:.1f}%')
 
     def calculate_accuracy(self, y_true, y_pred):
+        """ Calculate accuracy of the neural network.
+        
+        Args:
+            y_true(numpy.ndarray): Array of true labels in one-hot format
+                                   and shape (num_of_inputs, one-hot).
+            y_pred(numpy.ndarray): Array of predicted labels in shape
+                                   (num_of_inputs, one-hot).
+
+        Returns:
+            accuracy(float): Accuracy of the neural net.
+        """
+        # Sum of correct predictions.
         correct_pred = 0
+
         for i in range(len(y_pred)):
+            # Boolean value wheter predicted label is the same as true label.
             equal = np.equal(np.argmax(y_true[i]), np.argmax(y_pred[i]))
+
+            # Change boolean type to float and add 
+            # it to sum of correct predictions.
             correct_pred += equal.astype(float)
+
+        # Calculate accuracy.    
         accuracy = (correct_pred/len(y_true))*100
 
         return accuracy
 
-    def score(self, x, y):
+    def score(self, x, y_true):
+        """ Perform forward step and calculate accuracy.
+
+        Args:
+            x(numpy.ndarray): Array of input data in shape
+                              (num_of_inputs, vector_input).
+            y_true(numpy.ndarray): Array of true labels in one-hot format
+                                   and shape (num_of_inputs, one-hot).
+
+        Returns:
+            accuracy(float): Accuracy of the neural net.
+        """
+        
+        # Perform forward step.
         self._forward(x)
+
+        # Get y_pred values from memory.
         y_pred = self.memory['a' + str(len(self.layers))]
         
-        accuracy = self.calculate_accuracy(y, y_pred)
+        # Calculate accuracy.
+        accuracy = self.calculate_accuracy(y_true, y_pred)
 
         return accuracy
 
     def k_fold_validation(self, x, y_true, k):
-        """ Perform k-fold cross validation. """
+        """ Perform k-fold cross validation. 
+        
+        Args:
+            x(numpy.ndarray): Array of input data in shape
+                              (num_of_inputs, vector_input).
+            y_true(numpy.ndarray): Array of true labels in one-hot format
+                                   and shape (num_of_inputs, one-hot).
+            k(int): Number of folds.
+        """
 
         # Split dataset into k folds.
         x_folds = np.array_split(x, k)
         y_folds = np.array_split(y_true, k)
 
+        # List to store accuracies after training on k-1 folds.
         accuracies = []
 
-        for i, fold in enumerate(x_folds[:(k-1)]):
+        for i in range(len(x_folds[:(k-1)])):
             # Init new weights for layers.
             self.init_layers()
 
             # Train network with one fold.
-            self.train(fold, y_folds[i], 300, True)
+            self.train(x_folds[i], y_folds[i], 300, True)
 
             # Calculate accuracy of the trained network on last fold.
             accuracy = self.score(x_folds[k-1], y_folds[k-1])
