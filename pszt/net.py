@@ -20,6 +20,9 @@ class MLP():
         # Dictionary that holds gradients.
         self.grad_values = {}
 
+        # List to store accuracies calculated in epoch.
+        self.accuracies = []
+
         # Learning rate of the optimizer.
         self.lr = 10e-4
 
@@ -71,6 +74,9 @@ class MLP():
 
                 # Calculate accuracy over whole input data.
                 accuracy = self.calculate_accuracy(y_true, y_pred)
+
+                # Store current accuracy.
+                self.accuracies.append(accuracy)
 
                 # Print current loss and accuracy of the neural net.
                 print(f'loss: {cross_entropy_loss:.2f}, accuracy: {accuracy:.1f}%')
@@ -149,8 +155,9 @@ class MLP():
             # Init new weights for layers.
             self.init_layers()
 
+            print(f'Current fold: {i}, Len of fold: {len(x_folds[i])}')
             # Train network with one fold.
-            self.train(x_folds[i], y_folds[i], 300, True)
+            self.train(x_folds[i], y_folds[i], 500, True)
 
             # Calculate accuracy of the trained network on last fold.
             accuracy = self.score(x_folds[k-1], y_folds[k-1])

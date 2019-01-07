@@ -26,8 +26,19 @@ def refactor(csv_path, new_csv_path):
                 if row[5] != 'not_relevant':
                     csv_writer.writerow([row[5], row[11]])
 
+def create_onehot(labels):
+    one_hot = np.zeros(3)
+    if int(labels) == 1:
+        one_hot[0] = 1
+    elif int(labels) == 3:
+        one_hot[1] = 1
+    elif int(labels) == 5:
+        one_hot[2] = 1
 
-def vectorize_dataset(csv_path, x_train_path, y_train_path):
+    return one_hot
+
+
+def vectorize_dataset(csv_path, x_train_path, y_train_path, ignore_list=None):
     """ Vectorize dataset using bag-of-words algorithm and one-hot encoding
     
     Args:
@@ -52,6 +63,10 @@ def vectorize_dataset(csv_path, x_train_path, y_train_path):
         # Helper variable to skip first row which contains labels of csv.
         first_row = True
 
+        # List of words to be skipped.
+        if ignore_list is None:
+            ignore_words = []
+
         for row in csv_content:
 
             # Skip first row of csv file.
@@ -59,32 +74,26 @@ def vectorize_dataset(csv_path, x_train_path, y_train_path):
                 first_row = False
                 continue
 
-            # count += 1
-            ignore_words = ['a']
-            # Split every words into a list.
+            
+            # Split every word into a list of strings.
             words = re.sub("[^\w]", " ",  row[1]).split()
 
             # Clean words.
-            words = [w.lower() for w in words if w not in ignore_words]
-
-            dataset_words.extend(words)
-            dataset_sentences.append(words)
+            words_cleaned = [w.lower() for w in words if w.lower() not in ignore_words]
 
             # Change sentiments to one-hot vector.
-            one_hot = np.zeros(3)
-            if int(row[0]) == 1:
-                one_hot[0] = 1
-            elif int(row[0]) == 3:
-                one_hot[1] = 1
-            elif int(row[0]) == 5:
-                one_hot[2] = 1
+            one_hot = create_onehot(row[0])
 
+            dataset_words.extend(words_cleaned)
+            dataset_sentences.append(words_cleaned)
             dataset_sentiments.append(one_hot)
 
     # Transform into set to avoid duplicates and create sorted list.
     dataset_words = sorted(list(set(dataset_words)))
-
+    # print(dataset_words)
+    
     print(len(dataset_sentences))
+    print(len(dataset_words))
     # print(count)
 
     len_dataset_words = len(dataset_words)
@@ -104,34 +113,33 @@ def vectorize_dataset(csv_path, x_train_path, y_train_path):
         dataset_sentences[i] = bag
 
     # Transform dataset_sentences list into numpy array.
-    x_train = np.array(dataset_sentences[:1000])
+    x_train = np.array(dataset_sentences)
     np.save(x_train_path, x_train)
 
-    y_train = np.array(dataset_sentiments[:1000])
+    y_train = np.array(dataset_sentiments)
     np.save(y_train_path, y_train)
     return x_train, y_train
 
 
 if __name__ == "__main__":
     # File path to the csv file.
-    csv_path = 'Apple-Twitter-Sentiment-DFE.csv'
+    csv_path = '../Apple-Twitter-Sentiment-DFE.csv'
 
     # File path to the new csv file.
-    new_csv_path = 'apple-twitter.csv'
+    new_csv_path = '../apple-twitter_test.csv'
 
     # Refactor dataset.
     refactor(csv_path, new_csv_path)
 
-    x_train, y_train = vectorize_dataset('apple-twitter.csv',
-                                         'x_train',
-                                         'y_train')
+    x_train, y_train = vectorize_dataset(new_csv_path,
+                                         'x_train_test',
+                                         'y_train_test')
 
-    # x_train = np.load('x_train.npy')
-    # y_train = np.load('y_train.npy')
+    # x_train = np.load('x_train_test.npy')
+    # y_train = np.load('y_train_test.npy')
     # print(x_train.shape)
     # print(y_train.shape)
 
-    # y_train
     # print(y_train[1])
 
     # for i in range(10):
