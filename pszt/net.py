@@ -38,12 +38,22 @@ class MLP():
             # in the current layer.
             output_size = layer["output_dim"]
 
-            # Initialize weights w, b and save them to dictionary param_values
-            # for later usage.
-            self.param_values['w' + str(i)] = np.random.rand(
-                input_size, output_size) * 0.01
-            self.param_values['b' + str(i)] = np.random.randn(
-                output_size) * 0.01
+
+            # Create arrays of w, b and populate it with random samples 
+            # from a uniform distribution (U) and save them for later usage.
+
+            self.param_values['w' + str(i)] = np.random.uniform(
+                low=(-1/np.sqrt(input_size)),
+                high=(1/np.sqrt(input_size)),
+                size=(input_size, output_size)
+            )
+
+            self.param_values['b' + str(i)] = np.random.uniform(
+                low=(-1/np.sqrt(input_size)),
+                high=(1/np.sqrt(input_size)),
+                size=output_size
+            )
+
 
     def train(self, x, y_true, epochs, silent=False):
         """ Perform training of neural network.
@@ -133,7 +143,7 @@ class MLP():
 
         return accuracy
 
-    def k_fold_validation(self, x, y_true, k):
+    def k_fold_validation(self, x, y_true, k, epochs):
         """ Perform k-fold cross validation. 
         
         Args:
@@ -144,9 +154,13 @@ class MLP():
             k(int): Number of folds.
         """
 
+        # Create a random order to shuffle the dataset. 
+        s = np.arange(x.shape[0])
+        np.random.shuffle(s)
+
         # Split dataset into k folds.
-        x_folds = np.array_split(x, k)
-        y_folds = np.array_split(y_true, k)
+        x_folds = np.array_split(x[s], k)
+        y_folds = np.array_split(y_true[s], k)
 
         # List to store accuracies after training on k-1 folds.
         accuracies = []
@@ -157,7 +171,7 @@ class MLP():
 
             print(f'Current fold: {i}, Len of fold: {len(x_folds[i])}')
             # Train network with one fold.
-            self.train(x_folds[i], y_folds[i], 500, True)
+            self.train(x_folds[i], y_folds[i], epochs, True)
 
             # Calculate accuracy of the trained network on last fold.
             accuracy = self.score(x_folds[k-1], y_folds[k-1])
