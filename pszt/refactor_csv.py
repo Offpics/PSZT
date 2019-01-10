@@ -97,6 +97,13 @@ def vectorize_dataset(csv_path, x_train_path, y_train_path, ignore_words=None):
 
     # Transform dataset_sentences list into numpy array.
     x_train = np.array(dataset_sentences)
+
+    # # Get maximum value in the x_train.
+    # max_value = np.max(x_train)
+
+    # # Normalize every value of dataset_sentences to be in range (0,1).
+    # x_train = x_train/max_value
+
     np.save(x_train_path, x_train)
 
     y_train = np.array(dataset_sentiments)

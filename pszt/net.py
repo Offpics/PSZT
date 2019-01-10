@@ -20,8 +20,11 @@ class MLP():
         # Dictionary that holds gradients.
         self.grad_values = {}
 
-        # List to store accuracies calculated in epoch.
+        # List to store accuracies calculated in an epoch.
         self.accuracies = []
+
+        # List to store losses calculated in epoch.
+        self.losses = []
 
         # Learning rate of the optimizer.
         self.lr = 10e-4
@@ -67,7 +70,7 @@ class MLP():
             silent(bool): Whether to calculate loss and accuracy and print it.
         """
 
-        for _ in range(epochs):
+        for i in range(epochs):
             # Perform forward propagation over neural network.
             self._forward(x)
 
@@ -77,19 +80,26 @@ class MLP():
             # Update weights of neural network.
             self._update_weights()
 
+            # Calculate cross_entropy_loss.
+            y_pred = self.memory['a' + str(len(self.layers))]
+            cross_entropy_loss = np.sum(-y_true * np.log(y_pred))
+
+            # Calculate accuracy over whole input data.
+            accuracy = self.calculate_accuracy(y_true, y_pred)
+
+            # Store current accuracy.
+            self.accuracies.append(accuracy)
+            self.losses.append(cross_entropy_loss)
+
             if silent == False:
-                # Calculate cross_entropy_loss.
-                y_pred = self.memory['a' + str(len(self.layers))]
-                cross_entropy_loss = np.sum(-y_true * np.log(y_pred))
+                if i % 50 == 0:
+                    # Print current loss and accuracy of the neural net.
+                    print(f'loss: {cross_entropy_loss:.2f}, accuracy: {accuracy:.1f}%')
 
-                # Calculate accuracy over whole input data.
-                accuracy = self.calculate_accuracy(y_true, y_pred)
+        print(f'loss: {cross_entropy_loss:.2f}, accuracy: {accuracy:.1f}% | last epoch')
+        return np.mean(self.losses) 
 
-                # Store current accuracy.
-                self.accuracies.append(accuracy)
-
-                # Print current loss and accuracy of the neural net.
-                print(f'loss: {cross_entropy_loss:.2f}, accuracy: {accuracy:.1f}%')
+            
 
     def calculate_accuracy(self, y_true, y_pred):
         """ Calculate accuracy of the neural network.
@@ -165,21 +175,35 @@ class MLP():
         # List to store accuracies after training on k-1 folds.
         accuracies = []
 
-        for i in range(len(x_folds[:(k-1)])):
+        # List to store losses after training on k-1 folds.
+        losses = []
+
+        for i in range(len(x_folds[:k])):
             # Init new weights for layers.
             self.init_layers()
 
-            print(f'Current fold: {i}, Len of fold: {len(x_folds[i])}')
-            # Train network with one fold.
-            self.train(x_folds[i], y_folds[i], epochs, True)
+            # Create temporary datasets to perform validation.
+            x_tmp = np.concatenate(np.delete(x_folds, i))
+            y_tmp = np.concatenate(np.delete(y_folds, i))
 
-            # Calculate accuracy of the trained network on last fold.
-            accuracy = self.score(x_folds[k-1], y_folds[k-1])
+            print(f'Current fold: {i}, Len of fold: {len(x_tmp)}')
+            # Train network.
+            loss_mean = self.train(x_tmp, y_tmp, epochs, silent=False)
+
+            # Calculate cross_entropy_loss.
+            y_pred = self.memory['a' + str(len(self.layers))]
+            cross_entropy_loss = np.sum(-y_tmp * np.log(y_pred))
+
+            # Calculate accuracy of the trained network on the current fold.
+            accuracy = self.score(x_folds[i], y_folds[i])
 
             accuracies.append(accuracy)
+            losses.append(loss_mean)
 
         print(f'Accuracies on k_folds: {accuracies}')
+        print(f'Losses on k_fold: {losses}')
         print(f'Mean of accuracies: {np.mean(accuracies)}')
+        print(f'Mean of losses: {np.mean(losses)}')
 
     def _forward(self, x):
         """ Perform forward step in the neural network.
