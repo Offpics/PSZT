@@ -70,7 +70,7 @@ class MLP():
             silent(bool): Whether to calculate loss and accuracy and print it.
         """
 
-        for i in range(epochs):
+        for i in range(1, epochs+1):
             # Perform forward propagation over neural network.
             self._forward(x)
 
@@ -80,25 +80,17 @@ class MLP():
             # Update weights of neural network.
             self._update_weights()
 
-            # Calculate cross_entropy_loss.
-            y_pred = self.memory['a' + str(len(self.layers))]
-            cross_entropy_loss = np.sum(-y_true * np.log(y_pred))
-
-            # Calculate accuracy over whole input data.
-            accuracy = self.calculate_accuracy(y_true, y_pred)
+            # Calculate accuracy of the trained network on test set.
+            accuracy, loss = self.score(x, y_true)
 
             # Store current accuracy.
             self.accuracies.append(accuracy)
-            self.losses.append(cross_entropy_loss)
+            self.losses.append(loss)
 
             if silent == False:
-                if i % 50 == 0:
+                if i % 10 == 0:
                     # Print current loss and accuracy of the neural net.
-                    print(f'loss: {cross_entropy_loss:.2f}, accuracy: {accuracy:.1f}%')
-
-        print(f'loss: {cross_entropy_loss:.2f}, accuracy: {accuracy:.1f}% | last epoch')
-        return np.mean(self.losses) 
-
+                    print(f'Epoch: {i}, loss: {loss:.2f}, accuracy: {accuracy:.1f}%')
             
 
     def calculate_accuracy(self, y_true, y_pred):
@@ -129,8 +121,8 @@ class MLP():
 
         return accuracy
 
-    def score(self, x, y_true):
-        """ Perform forward step and calculate accuracy.
+    def score(self, x, y_true, forward=False):
+        """ Perform forward step, calculate accuracy and loss.
 
         Args:
             x(numpy.ndarray): Array of input data in shape
@@ -141,9 +133,10 @@ class MLP():
         Returns:
             accuracy(float): Accuracy of the neural net.
         """
-        
-        # Perform forward step.
-        self._forward(x)
+
+        if forward:
+            # Perform forward step.
+            self._forward(x)
 
         # Get y_pred values from memory.
         y_pred = self.memory['a' + str(len(self.layers))]
@@ -151,7 +144,10 @@ class MLP():
         # Calculate accuracy.
         accuracy = self.calculate_accuracy(y_true, y_pred)
 
-        return accuracy
+        # Calculate loss.
+        cross_entropy_loss = np.sum(-y_true * np.log(y_pred))
+
+        return accuracy, cross_entropy_loss
 
     def k_fold_validation(self, x, y_true, k, epochs):
         """ Perform k-fold cross validation. 
@@ -172,38 +168,58 @@ class MLP():
         x_folds = np.array_split(x[s], k)
         y_folds = np.array_split(y_true[s], k)
 
-        # List to store accuracies after training on k-1 folds.
+        # List to store accuracies.
         accuracies = []
 
-        # List to store losses after training on k-1 folds.
+        # List to store losses.
         losses = []
 
         for i in range(len(x_folds[:k])):
             # Init new weights for layers.
             self.init_layers()
 
-            # Create temporary datasets to perform validation.
-            x_tmp = np.concatenate(np.delete(x_folds, i))
-            y_tmp = np.concatenate(np.delete(y_folds, i))
+            # Create train test T\Ti.
+            x_train = np.concatenate(np.delete(x_folds, i))
+            y_train = np.concatenate(np.delete(y_folds, i))
 
-            print(f'Current fold: {i}, Len of fold: {len(x_tmp)}')
-            # Train network.
-            loss_mean = self.train(x_tmp, y_tmp, epochs, silent=False)
+            # Create test set Ti.
+            x_test = x_folds[i]
+            y_test = y_folds[i]
 
-            # Calculate cross_entropy_loss.
-            y_pred = self.memory['a' + str(len(self.layers))]
-            cross_entropy_loss = np.sum(-y_tmp * np.log(y_pred))
+            # Create list to store accuracies and losses in i step.
+            accuracies_curr = []
+            losses_curr = []
 
-            # Calculate accuracy of the trained network on the current fold.
-            accuracy = self.score(x_folds[i], y_folds[i])
+            print(f'Current fold: T{i},')
+            print(f'Len of x_train: {len(x_train)},')
+            print(f'Len of x_test: {len(x_test)}.')
 
-            accuracies.append(accuracy)
-            losses.append(loss_mean)
+            # Perform training.
+            for j in range(epochs):
+                # Perform training and update weights.
+                self._forward(x_train)
+                self._backward(x_train, y_train)
+                self._update_weights()
 
-        print(f'Accuracies on k_folds: {accuracies}')
-        print(f'Losses on k_fold: {losses}')
-        print(f'Mean of accuracies: {np.mean(accuracies)}')
-        print(f'Mean of losses: {np.mean(losses)}')
+                # Calculate accuracy of the trained network on test set.
+                accuracy, loss = self.score(x_test, y_test, True)
+
+                accuracies_curr.append(accuracy)
+                losses_curr.append(loss)
+
+            # Calculate mean losses and accuracies and print them.
+            mean_accuracy = np.mean(accuracies_curr)
+            mean_loss = np.mean(losses_curr)
+            print(f'Mean accuracy on T{i}: {mean_accuracy:.2f}')
+            print(f'Mean losses on T{i}: {mean_loss:.2f}\n')
+                
+            accuracies.append(mean_accuracy)
+            losses.append(mean_loss)
+
+        print(f'Accuracy list on Ti sets: {accuracies}')
+        print(f'Losses list on Ti sets: {losses}')
+        print(f'Mean accuracy on all T sets: {np.mean(accuracies):.2f}')
+        print(f'Mean losses on all T sets: {np.mean(losses):.2f}')
 
     def _forward(self, x):
         """ Perform forward step in the neural network.
