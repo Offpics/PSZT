@@ -41,21 +41,30 @@ class MLP():
             # in the current layer.
             output_size = layer["output_dim"]
 
+            if i == len(self.layers):
+                # Create arrays of w, b for last layer and populate
+                # it with zeros.
+                self.param_values['w' + str(i)] = np.zeros(
+                    shape=(input_size, output_size)
+                )
 
-            # Create arrays of w, b and populate it with random samples 
-            # from a uniform distribution (U) and save them for later usage.
+                self.param_values['b' + str(i)] = np.zeros(
+                    shape=output_size
+                )
+            else:
 
-            self.param_values['w' + str(i)] = np.random.uniform(
-                low=(-1/np.sqrt(input_size)),
-                high=(1/np.sqrt(input_size)),
-                size=(input_size, output_size)
-            )
-
-            self.param_values['b' + str(i)] = np.random.uniform(
-                low=(-1/np.sqrt(input_size)),
-                high=(1/np.sqrt(input_size)),
-                size=output_size
-            )
+                # Create arrays of w, b and populate it with random samples 
+                # from a uniform distribution (U) and save them for later usage.
+                self.param_values['w' + str(i)] = np.random.uniform(
+                    low=(-1/np.sqrt(input_size)),
+                    high=(1/np.sqrt(input_size)),
+                    size=(input_size, output_size)
+                )
+                self.param_values['b' + str(i)] = np.random.uniform(
+                    low=(-1/np.sqrt(input_size)),
+                    high=(1/np.sqrt(input_size)),
+                    size=output_size
+                )
 
 
     def train(self, x, y_true, epochs, silent=False):
@@ -195,7 +204,7 @@ class MLP():
             print(f'Len of x_test: {len(x_test)}.')
 
             # Perform training.
-            for j in range(epochs):
+            for j in range(1, epochs+1):
                 # Perform training and update weights.
                 self._forward(x_train)
                 self._backward(x_train, y_train)
@@ -206,6 +215,10 @@ class MLP():
 
                 accuracies_curr.append(accuracy)
                 losses_curr.append(loss)
+
+                if j % 50 == 0:
+                    # Print current loss and accuracy of the neural net.
+                    print(f'Epoch: {j}, loss: {loss:.2f}, accuracy: {accuracy:.1f}%')
 
             # Calculate mean losses and accuracies and print them.
             mean_accuracy = np.mean(accuracies_curr)

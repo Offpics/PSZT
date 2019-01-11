@@ -31,8 +31,10 @@ def vectorize_dataset(csv_path, x_train_path, y_train_path, ignore_words=None):
     """ Vectorize dataset using bag-of-words algorithm and one-hot encoding
     
     Args:
+        csv_path: Path to csv file with dataset.
         x_train_path: Path to file to save x_train array.
         y_train_path: Path to file to save y_train array.
+        ignore_words: List of words to not include in x_train.
     """
     # List of words in the dataset.
     dataset_words = []
@@ -70,7 +72,7 @@ def vectorize_dataset(csv_path, x_train_path, y_train_path, ignore_words=None):
             words_cleaned = [w.lower() for w in words if w.lower() not in ignore_words]
 
             # Change sentiments to one-hot vector.
-            one_hot = create_onehot(row[0])
+            one_hot = _create_onehot(row[0])
 
             dataset_words.extend(words_cleaned)
             dataset_sentences.append(words_cleaned)
@@ -109,8 +111,54 @@ def vectorize_dataset(csv_path, x_train_path, y_train_path, ignore_words=None):
     y_train = np.array(dataset_sentiments)
     np.save(y_train_path, y_train)
 
-def create_onehot(labels):
+def tf_idf(x_train_path, x_train_tfidf_path):
+    """ Transform bag-of-words model to TFIDF.
+
+    Args:
+        x_train_path: Path to .npy file with sentences in big-of-words model.
+        x_train_tfidf_path: Path to file to save x_train in form of TFIDF.
+    """
+
+    # Load dataset.
+    x_train = np.load(x_train_path)
+
+    # Calculate TF(Term Frequency) for every sentence.
+    for i in range(len(x_train)):
+        # Calculate sum of occurings in sentence.
+        sum_of_terms = np.sum(x_train[i])
+
+        # Divide x_train element-wise by sum_of_terms.
+        x_train[i] /= sum_of_terms
+
+    # Number of documents in the corpus.
+    D = x_train.shape[0] 
+
+    # IDF (Inverse Document Frequency) vector populated with zeros.
+    idf = np.zeros(x_train.shape[1]) 
+
+    # Populate IDF vector with number of documents where the term appears.
+    for vector in x_train:
+        # Find indexes of non zero values.
+        non_zero_indexes = np.nonzero(vector)
+        
+        # Append vector d at those indexes.
+        for idx in non_zero_indexes:
+            idf[idx] += 1
+
+    # Calculate final idf vector.
+    idf = np.divide(D, idf)
+    idf = np.log(idf)
+
+    # Multiply TF by IDF.
+    x_train *= idf
+
+    # Save numpy array to disk.
+    np.save(x_train_tfidf_path, x_train)
+    
+
+def _create_onehot(labels):
     one_hot = np.zeros(3)
+
     if int(labels) == 1:
         one_hot[0] = 1
     elif int(labels) == 3:
