@@ -48,13 +48,12 @@ class MLP():
                     shape=(input_size, output_size)
                 )
 
-                self.param_values['b' + str(i)] = np.zeros(
-                    shape=output_size
-                )
+                self.param_values['b' + str(i)] = np.zeros(shape=output_size)
             else:
 
-                # Create arrays of w, b and populate it with random samples 
-                # from a uniform distribution (U) and save them for later usage.
+                # Create arrays of w, b and populate it with random samples
+                # from a uniform distribution (U) and save
+                # them for later usage.
                 self.param_values['w' + str(i)] = np.random.uniform(
                     low=(-1/np.sqrt(input_size)),
                     high=(1/np.sqrt(input_size)),
@@ -65,7 +64,6 @@ class MLP():
                     high=(1/np.sqrt(input_size)),
                     size=output_size
                 )
-
 
     def train(self, x, y_true, epochs, silent=False):
         """ Perform training of neural network.
@@ -89,22 +87,23 @@ class MLP():
             # Update weights of neural network.
             self._update_weights()
 
-            # Calculate accuracy of the trained network on test set.
+            # Calculate accuracy and loss of the trained network on train set.
             accuracy, loss = self.score(x, y_true)
+
+            # TODO: Add calculation of accuracy and loss on test set.
 
             # Store current accuracy.
             self.accuracies.append(accuracy)
             self.losses.append(loss)
 
-            if silent == False:
+            if silent is False:
                 if i % 10 == 0:
                     # Print current loss and accuracy of the neural net.
                     print(f'Epoch: {i}, loss: {loss:.2f}, accuracy: {accuracy:.1f}%')
-            
 
     def calculate_accuracy(self, y_true, y_pred):
         """ Calculate accuracy of the neural network.
-        
+
         Args:
             y_true(numpy.ndarray): Array of true labels in one-hot format
                                    and shape (num_of_inputs, one-hot).
@@ -121,11 +120,11 @@ class MLP():
             # Boolean value wheter predicted label is the same as true label.
             equal = np.equal(np.argmax(y_true[i]), np.argmax(y_pred[i]))
 
-            # Change boolean type to float and add 
+            # Change boolean type to float and add
             # it to sum of correct predictions.
             correct_pred += equal.astype(float)
 
-        # Calculate accuracy.    
+        # Calculate accuracy.
         accuracy = (correct_pred/len(y_true))*100
 
         return accuracy
@@ -149,7 +148,7 @@ class MLP():
 
         # Get y_pred values from memory.
         y_pred = self.memory['a' + str(len(self.layers))]
-        
+
         # Calculate accuracy.
         accuracy = self.calculate_accuracy(y_true, y_pred)
 
@@ -159,8 +158,8 @@ class MLP():
         return accuracy, cross_entropy_loss
 
     def k_fold_validation(self, x, y_true, k, epochs):
-        """ Perform k-fold cross validation. 
-        
+        """ Perform k-fold cross validation.
+
         Args:
             x(numpy.ndarray): Array of input data in shape
                               (num_of_inputs, vector_input).
@@ -169,7 +168,7 @@ class MLP():
             k(int): Number of folds.
         """
 
-        # Create a random order to shuffle the dataset. 
+        # Create a random order to shuffle the dataset.
         s = np.arange(x.shape[0])
         np.random.shuffle(s)
 
@@ -177,10 +176,8 @@ class MLP():
         x_folds = np.array_split(x[s], k)
         y_folds = np.array_split(y_true[s], k)
 
-        # List to store accuracies.
+        # Lists to store accuracies and losses in ith step.
         accuracies = []
-
-        # List to store losses.
         losses = []
 
         for i in range(len(x_folds[:k])):
@@ -195,7 +192,7 @@ class MLP():
             x_test = x_folds[i]
             y_test = y_folds[i]
 
-            # Create list to store accuracies and losses in i step.
+            # Lists to store accuracies and losses in jth step.
             accuracies_curr = []
             losses_curr = []
 
@@ -225,7 +222,7 @@ class MLP():
             mean_loss = np.mean(losses_curr)
             print(f'Mean accuracy on T{i}: {mean_accuracy:.2f}')
             print(f'Mean losses on T{i}: {mean_loss:.2f}\n')
-                
+
             accuracies.append(mean_accuracy)
             losses.append(mean_loss)
 
@@ -328,14 +325,6 @@ class MLP():
             self.param_values['w' + str(i)] -= self.lr * dcost_w
             self.param_values['b' + str(i)] -= self.lr * dcost_b.sum(axis=0)
 
-    def set_lr(self, lr):
-        """ Set learning rate.
-
-        Args:
-            lr(int): Learning rate.
-        """
-        self.lr = lr
-
     def add_layer(self, input_dim, output_dim, activation):
         """ Add layer to the neural network.
 
@@ -354,7 +343,7 @@ class MLP():
 
     def print_layers(self):
         """ Print layers of the neural network. """
-        for i, layer in enumerate(self.layers, start = 1):
+        for i, layer in enumerate(self.layers, start=1):
             print(f'{i}. Layer - input_dim: {layer["input_dim"]}, ', end='')
             print(f'output_dim: {layer["output_dim"]}, ', end='')
             print(f'activation: {layer["activation"]}')

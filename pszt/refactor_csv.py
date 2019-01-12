@@ -27,9 +27,10 @@ def refactor(csv_path, new_csv_path):
                     csv_writer.writerow([row[5], row[11]])
 
 
-def vectorize_dataset(csv_path, x_train_path, y_train_path, ignore_words=None):
+def vectorize_dataset(csv_path, x_train_path, y_train_path,
+                      ignore_words=None, tfidf=False):
     """ Vectorize dataset using bag-of-words algorithm and one-hot encoding
-    
+
     Args:
         csv_path: Path to csv file with dataset.
         x_train_path: Path to file to save x_train array.
@@ -61,12 +62,13 @@ def vectorize_dataset(csv_path, x_train_path, y_train_path, ignore_words=None):
         for row in csv_content:
 
             # Skip first row of csv file.
-            if first_row == True:
+            if first_row:
                 first_row = False
                 continue
 
-            # Split every word into a list of strings.
-            words = re.sub("[^\w]", " ",  row[1]).split()
+            # Replace every non-alphanumeric character with space
+            # and split into list.
+            words = re.sub("\W", " ",  row[1]).split()
 
             # Clean words.
             words_cleaned = [w.lower() for w in words if w.lower() not in ignore_words]
@@ -93,68 +95,53 @@ def vectorize_dataset(csv_path, x_train_path, y_train_path, ignore_words=None):
             for j, word_w in enumerate(dataset_words):
                 if word_w == word_s:
                     bag[j] += 1
-        
+
         # bag = np.reshape(bag, (len_dataset_words, 1))
         dataset_sentences[i] = bag
 
     # Transform dataset_sentences list into numpy array.
     x_train = np.array(dataset_sentences)
 
-    # # Get maximum value in the x_train.
-    # max_value = np.max(x_train)
-
-    # # Normalize every value of dataset_sentences to be in range (0,1).
-    # x_train = x_train/max_value
-
-    np.save(x_train_path, x_train)
-
+    # Create numpy array of y_train.
     y_train = np.array(dataset_sentiments)
+
+    # Wheter to change current bag-of-words model to TFIDF.
+    if tfidf:
+        # Calculate TF(Term Frequency) for every sentence.
+        for i in range(len(x_train)):
+            # Calculate sum of occurings in sentence.
+            sum_of_terms = np.sum(x_train[i])
+
+            # Divide x_train element-wise by sum_of_terms.
+            x_train[i] /= sum_of_terms
+
+        # Number of documents in the corpus.
+        D = x_train.shape[0]
+
+        # IDF (Inverse Document Frequency) vector populated with zeros.
+        # Number of documents where the term t apppears
+        total_occurings = np.zeros(x_train.shape[1])
+
+        for sentence in x_train:
+            # Find indexes of non zero values.
+            non_zero_indexes = np.nonzero(sentence)
+
+            # Append vector d at non_zero_indexes resulting in number
+            # of documents where term t appears.
+            for idx in non_zero_indexes:
+                total_occurings[idx] += 1
+
+        # Calculate final idf vector.
+        idf = np.divide(D, total_occurings)
+        idf = np.log(idf)
+
+        # Multiply TF by IDF.
+        x_train *= idf
+
+    # Save numpy arrays to disk.
+    np.save(x_train_path, x_train)
     np.save(y_train_path, y_train)
 
-def tf_idf(x_train_path, x_train_tfidf_path):
-    """ Transform bag-of-words model to TFIDF.
-
-    Args:
-        x_train_path: Path to .npy file with sentences in big-of-words model.
-        x_train_tfidf_path: Path to file to save x_train in form of TFIDF.
-    """
-
-    # Load dataset.
-    x_train = np.load(x_train_path)
-
-    # Calculate TF(Term Frequency) for every sentence.
-    for i in range(len(x_train)):
-        # Calculate sum of occurings in sentence.
-        sum_of_terms = np.sum(x_train[i])
-
-        # Divide x_train element-wise by sum_of_terms.
-        x_train[i] /= sum_of_terms
-
-    # Number of documents in the corpus.
-    D = x_train.shape[0] 
-
-    # IDF (Inverse Document Frequency) vector populated with zeros.
-    idf = np.zeros(x_train.shape[1]) 
-
-    # Populate IDF vector with number of documents where the term appears.
-    for vector in x_train:
-        # Find indexes of non zero values.
-        non_zero_indexes = np.nonzero(vector)
-        
-        # Append vector d at those indexes.
-        for idx in non_zero_indexes:
-            idf[idx] += 1
-
-    # Calculate final idf vector.
-    idf = np.divide(D, idf)
-    idf = np.log(idf)
-
-    # Multiply TF by IDF.
-    x_train *= idf
-
-    # Save numpy array to disk.
-    np.save(x_train_tfidf_path, x_train)
-    
 
 def _create_onehot(labels):
     one_hot = np.zeros(3)
