@@ -101,7 +101,7 @@ class MLP():
                     # Print current loss and accuracy of the neural net.
                     print(f'Epoch: {i}, loss: {loss:.2f}, accuracy: {accuracy:.1f}%')
 
-    def train_batch(self, x, y_true, epochs, silent=False, batch_size=256):
+    def train_batch(self, x, y_true, epochs, silent=False, batch_size=64):
         """ Perform training of neural network.
 
         Args:
@@ -115,10 +115,10 @@ class MLP():
 
         for i in range(1, epochs+1):
             for index in range(0, x.shape[0], batch_size):
-                x_batch = x[index:min(index+batch_size, x.shape[0]), :]
-                y_batch = y_true[index:min(index+batch_size, x.shape[0]), :]
+                # Create x, y batches.
+                x_batch = x[index:min(index+batch_size, x.shape[0])]
+                y_batch = y_true[index:min(index+batch_size, x.shape[0])]
                 
-                # print(batch.shape)
                 # Perform forward propagation over neural network.
                 self._forward(x_batch)
 
