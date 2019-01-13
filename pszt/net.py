@@ -65,7 +65,43 @@ class MLP():
                     size=output_size
                 )
 
-    def train(self, x, y_true, epochs, silent=False, batch_size=256):
+    def train(self, x, y_true, epochs, silent=False):
+        """ Perform training of neural network.
+
+        Args:
+            x(numpy.ndarray): Array of input data in shape
+                              (num_of_inputs, vector_input).
+            y_true(numpy.ndarray): Array of true labels in one-hot format
+                                   and shape (num_of_inputs, one-hot).
+            epochs(int): Number of epochs to perform.
+            silent(bool): Whether to calculate loss and accuracy and print it.
+        """
+
+        for i in range(1, epochs+1):
+            # Perform forward propagation over neural network.
+            self._forward(x)
+
+            # Perform backward propagation over neural network.
+            self._backward(x, y_true)
+
+            # Update weights of neural network.
+            self._update_weights()
+
+            # Calculate accuracy and loss of the trained network on train set.
+            accuracy, loss = self.score(x, y_true)
+
+            # TODO: Add calculation of accuracy and loss on test set.
+
+            # Store current accuracy.
+            self.accuracies.append(accuracy)
+            self.losses.append(loss)
+
+            if silent is False:
+                if i % 10 == 0:
+                    # Print current loss and accuracy of the neural net.
+                    print(f'Epoch: {i}, loss: {loss:.2f}, accuracy: {accuracy:.1f}%')
+
+    def train_batch(self, x, y_true, epochs, silent=False, batch_size=256):
         """ Perform training of neural network.
 
         Args:
@@ -105,6 +141,8 @@ class MLP():
                 if i % 1 == 0:
                     # Print current loss and accuracy of the neural net.
                     print(f'Epoch: {i}, loss: {loss:.2f}, accuracy: {accuracy:.1f}%')
+
+        
 
     def calculate_accuracy(self, y_true, y_pred):
         """ Calculate accuracy of the neural network.
