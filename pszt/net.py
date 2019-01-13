@@ -65,7 +65,7 @@ class MLP():
                     size=output_size
                 )
 
-    def train(self, x, y_true, epochs, silent=False):
+    def train(self, x, y_true, epochs, silent=False, batch_size=256):
         """ Perform training of neural network.
 
         Args:
@@ -78,26 +78,31 @@ class MLP():
         """
 
         for i in range(1, epochs+1):
-            # Perform forward propagation over neural network.
-            self._forward(x)
+            for index in range(0, x.shape[0], batch_size):
+                x_batch = x[index:min(index+batch_size, x.shape[0]), :]
+                y_batch = y_true[index:min(index+batch_size, x.shape[0]), :]
+                
+                # print(batch.shape)
+                # Perform forward propagation over neural network.
+                self._forward(x_batch)
 
-            # Perform backward propagation over neural network.
-            self._backward(x, y_true)
+                # Perform backward propagation over neural network.
+                self._backward(x_batch, y_batch)
 
-            # Update weights of neural network.
-            self._update_weights()
+                # Update weights of neural network.
+                self._update_weights()
 
-            # Calculate accuracy and loss of the trained network on train set.
-            accuracy, loss = self.score(x, y_true)
+                # Calculate accuracy and loss of the trained network on train set.
+                accuracy, loss = self.score(x, y_true, True)
 
-            # TODO: Add calculation of accuracy and loss on test set.
+                # TODO: Add calculation of accuracy and loss on test set.
 
-            # Store current accuracy.
-            self.accuracies.append(accuracy)
-            self.losses.append(loss)
+                # Store current accuracy.
+                self.accuracies.append(accuracy)
+                self.losses.append(loss)
 
             if silent is False:
-                if i % 10 == 0:
+                if i % 1 == 0:
                     # Print current loss and accuracy of the neural net.
                     print(f'Epoch: {i}, loss: {loss:.2f}, accuracy: {accuracy:.1f}%')
 
