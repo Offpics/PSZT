@@ -101,6 +101,51 @@ class MLP():
                     # Print current loss and accuracy of the neural net.
                     print(f'Epoch: {i}, loss: {loss:.2f}, accuracy: {accuracy:.1f}%')
 
+    def train_batch_with_test(self, x, y_true, x_test, y_test,
+                              epochs, silent=False, batch_size=64):
+        """ Perform training of neural network.
+
+        Args:
+            x(numpy.ndarray): Array of input data in shape
+                              (num_of_inputs, vector_input).
+            y_true(numpy.ndarray): Array of true labels in one-hot format
+                                   and shape (num_of_inputs, one-hot).
+            epochs(int): Number of epochs to perform.
+            silent(bool): Whether to calculate loss and accuracy and print it.
+            batch_size(int): Number of samples from dataset to train net.
+        """
+
+        for i in range(1, epochs+1):
+            for index in range(0, x.shape[0], batch_size):
+                # Create x, y batches.
+                x_batch = x[index:min(index+batch_size, x.shape[0])]
+                y_batch = y_true[index:min(index+batch_size, x.shape[0])]
+                
+                # Perform forward propagation over neural network.
+                self._forward(x_batch)
+
+                # Perform backward propagation over neural network.
+                self._backward(x_batch, y_batch)
+
+                # Update weights of neural network.
+                self._update_weights()
+
+                # Calculate accuracy and loss of the trained network on train set.
+                accuracy, loss = self.score(x, y_true, True)
+
+                # Calculate accuracy and loss of the trained network on test set.
+                accuracy_test, loss_test = self.score(x_test, y_test, True)
+
+            # Store current accuracy.
+            self.accuracies.append([accuracy, accuracy_test])
+            self.losses.append([loss, loss_test])
+
+            if silent is False:
+                if i % 1 == 0:
+                    # Print current loss and accuracy of the neural net.
+                    print(f'Epoch: {i}, loss_train: {loss:.2f}, accuracy_train: {accuracy:.1f}%')
+                    print(f'\t  loss_test: {loss_test:.2f}, accuracy_test: {accuracy_test:.1f}%')
+
     def train_batch(self, x, y_true, epochs, silent=False, batch_size=64):
         """ Perform training of neural network.
 
@@ -111,6 +156,7 @@ class MLP():
                                    and shape (num_of_inputs, one-hot).
             epochs(int): Number of epochs to perform.
             silent(bool): Whether to calculate loss and accuracy and print it.
+            batch_size(int): Number of samples from dataset to train net.
         """
 
         for i in range(1, epochs+1):
@@ -133,9 +179,9 @@ class MLP():
 
                 # TODO: Add calculation of accuracy and loss on test set.
 
-                # Store current accuracy.
-                self.accuracies.append(accuracy)
-                self.losses.append(loss)
+            # Store current accuracy.
+            self.accuracies.append(accuracy)
+            self.losses.append(loss)
 
             if silent is False:
                 if i % 1 == 0:
@@ -200,7 +246,7 @@ class MLP():
 
         return accuracy, cross_entropy_loss
 
-    def k_fold_validation(self, x, y_true, k, epochs):
+    def k_fold_validation(self, x, y_true, k, epochs, batch_size=256):
         """ Perform k-fold cross validation.
 
         Args:
@@ -224,9 +270,6 @@ class MLP():
         losses = []
 
         for i in range(len(x_folds[:k])):
-            # Init new weights for layers.
-            self.init_layers()
-
             # Create train test T\Ti.
             x_train = np.concatenate(np.delete(x_folds, i))
             y_train = np.concatenate(np.delete(y_folds, i))
@@ -239,24 +282,31 @@ class MLP():
             accuracies_curr = []
             losses_curr = []
 
+            # Init new weights for layers.
+            self.init_layers()
+
             print(f'Current fold: T{i},')
             print(f'Len of x_train: {len(x_train)},')
             print(f'Len of x_test: {len(x_test)}.')
 
             # Perform training.
             for j in range(1, epochs+1):
-                # Perform training and update weights.
-                self._forward(x_train)
-                self._backward(x_train, y_train)
-                self._update_weights()
+                for index in range(0, x_train.shape[0], batch_size):
+                    # Create x, y batches.
+                    x_batch = x_train[index:min(index+batch_size, x.shape[0])]
+                    y_batch = y_train[index:min(index+batch_size, x.shape[0])]
+                    # Perform training and update weights.
+                    self._forward(x_batch)
+                    self._backward(x_batch, y_batch)
+                    self._update_weights()
 
-                # Calculate accuracy of the trained network on test set.
-                accuracy, loss = self.score(x_test, y_test, True)
+                    # Calculate accuracy of the trained network on test set.
+                    accuracy, loss = self.score(x_test, y_test, True)
 
-                accuracies_curr.append(accuracy)
-                losses_curr.append(loss)
+                    accuracies_curr.append(accuracy)
+                    losses_curr.append(loss)
 
-                if j % 50 == 0:
+                if j % 5 == 0:
                     # Print current loss and accuracy of the neural net.
                     print(f'Epoch: {j}, loss: {loss:.2f}, accuracy: {accuracy:.1f}%')
 
